@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  database:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_PASSWORD=postgres'
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+
+
+volumes:
+  db:
+    driver: local
