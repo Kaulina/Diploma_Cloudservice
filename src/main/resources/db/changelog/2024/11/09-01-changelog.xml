@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1731166863657-1" author="N????">
+        <dropTable cascadeConstraints="true" schemaName="public" tableName="person"/>
+    </changeSet>
+    <changeSet id="1731166863657-2" author="N????">
+        <dropTable cascadeConstraints="true" schemaName="public" tableName="persons"/>
+    </changeSet>
+    <changeSet id="1731166863734-20" author="N����">
+        <dropForeignKeyConstraint baseTableName="tfile" baseTableSchemaName="netology"
+                                  constraintName="tfile_user_null_fk"/>
+    </changeSet>
+    <changeSet id="1731166863734-8" author="N����">
+        <createTable schemaName="netology" tableName="user_user_files">
+            <column name="user_username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_files_filename" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1731166863734-9" author="N����">
+        <addColumn schemaName="netology" tableName="tfile">
+            <column name="date" type="DATETIME"/>
+            <column name="file_content" type="BLOB"/>
+            <column name="username" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="1731166863734-10" author="N����">
+        <addNotNullConstraint columnName="date" schemaName="netology" tableName="tfile"/>
+    </changeSet>
+    <changeSet id="1731166863734-12" author="N����">
+        <addNotNullConstraint columnName="file_content" schemaName="netology" tableName="tfile"/>
+    </changeSet>
+    <changeSet id="1731166863734-14" author="N����">
+        <addUniqueConstraint columnNames="user_username, user_files_filename"
+                             constraintName="uc_user_user_files_usususfi" schemaName="netology"
+                             tableName="user_user_files"/>
+    </changeSet>
+    <changeSet id="1731166863734-17" author="N����">
+        <addForeignKeyConstraint baseColumnNames="username" baseTableName="tfile" baseTableSchemaName="netology"
+                                 constraintName="FK_TFILE_ON_USERNAME" referencedColumnNames="username"
+                                 referencedTableName="user" referencedTableSchemaName="netology"/>
+    </changeSet>
+    <changeSet id="1731166863734-18" author="N����">
+        <addForeignKeyConstraint baseColumnNames="user_files_filename" baseTableName="user_user_files"
+                                 baseTableSchemaName="netology" constraintName="fk_useusefil_on_store_file"
+                                 referencedColumnNames="filename" referencedTableName="tfile"
+                                 referencedTableSchemaName="netology"/>
+    </changeSet>
+    <changeSet id="1731166863734-19" author="N����">
+        <addForeignKeyConstraint baseColumnNames="user_username" baseTableName="user_user_files"
+                                 baseTableSchemaName="netology" constraintName="fk_useusefil_on_user"
+                                 referencedColumnNames="username" referencedTableName="user"
+                                 referencedTableSchemaName="netology"/>
+    </changeSet>
+    <changeSet id="1731166863734-21" author="N����">
+        <dropColumn columnName="id" schemaName="netology" tableName="tfile"/>
+
+        <dropColumn columnName="create_date" schemaName="netology" tableName="tfile"/>
+
+        <dropColumn columnName="file" schemaName="netology" tableName="tfile"/>
+
+        <dropColumn columnName="user_id" schemaName="netology" tableName="tfile"/>
+    </changeSet>
+    <changeSet id="1731166863734-22" author="N����">
+        <dropColumn columnName="id" schemaName="netology" tableName="user"/>
+    </changeSet>
+    <changeSet id="1731166863734-1" author="N����">
+        <modifyDataType columnName="password" newDataType="VARCHAR(255)" schemaName="netology" tableName="user"/>
+    </changeSet>
+    <changeSet id="1731166863734-2" author="N����">
+        <addNotNullConstraint columnDataType="BIGINT" columnName="size" schemaName="netology" tableName="tfile"
+                              validate="true"/>
+    </changeSet>
+    <changeSet id="1731166863734-3" author="N����">
+        <modifyDataType columnName="username" newDataType="VARCHAR(255)" schemaName="netology" tableName="user"/>
+    </changeSet>
+    <changeSet id="1731166863734-5" author="N����">
+        <addPrimaryKey columnNames="filename" constraintName="pk_tfile" schemaName="netology" tableName="tfile"/>
+    </changeSet>
+    <changeSet id="1731166863734-7" author="N����">
+        <addPrimaryKey columnNames="username" constraintName="pk_user" schemaName="netology" tableName="user"/>
+    </changeSet>
+
+</databaseChangeLog>

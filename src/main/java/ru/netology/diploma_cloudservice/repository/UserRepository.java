@@ -1,10 +1,23 @@
 package ru.netology.diploma_cloudservice.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.netology.diploma_cloudservice.entity.User;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    User findUserByUsername(String username);
+public class UserRepository {
+    private final Map<String, String> tokenAndUsers = new ConcurrentHashMap<>();
+
+    public void saveTokenAndUser(String token, String username) {
+        tokenAndUsers.put(token, username);
+    }
+
+    public void removeTokenAndUsername(String token) {
+        tokenAndUsers.remove(token);
+    }
+
+    public String getUsernameByToken(String token) {
+        return tokenAndUsers.get(token);
+    }
 }

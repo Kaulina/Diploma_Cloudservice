@@ -5,108 +5,74 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import ru.netology.diploma_cloudservice.dto.ChangeFilenameRequest;
-import ru.netology.diploma_cloudservice.dto.FileListResponse;
-import ru.netology.diploma_cloudservice.entity.File;
+import ru.netology.diploma_cloudservice.dto.request.ChangeFilenameRequest;
+import ru.netology.diploma_cloudservice.entity.StoreFile;
 import ru.netology.diploma_cloudservice.entity.User;
-import ru.netology.diploma_cloudservice.exception.FileException;
-import ru.netology.diploma_cloudservice.exception.FileNotExistException;
-import ru.netology.diploma_cloudservice.exception.MissingValueException;
+import ru.netology.diploma_cloudservice.exception.InputDataException;
 import ru.netology.diploma_cloudservice.repository.FileRepository;
+import ru.netology.diploma_cloudservice.repository.LoginRepository;
 import ru.netology.diploma_cloudservice.repository.UserRepository;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class FileServiceImpl implements FileService {
 
-    private final FileRepository repository;
-
+public class FileServiceImpl {
+    private final FileRepository fileRepository;
     private final UserRepository userRepository;
+    private final LoginRepository loginRepository;
 
-    public User findUserByName(Principal user) {
-        User userEntity = userRepository.findUserByUsername(user.getName());
-        if (userEntity == null) {
-            throw new RuntimeException("Неверно передан пользователь!");
+    @Transactional
+    public void uploadFile(User user, String fileName, MultipartFile file) {
+        try {
+            fileRepository.save(new StoreFile(fileName, LocalDateTime.now(), file.getSize(), file.getBytes(), user));
+            log.info("Successfully uploaded file. User: {}", user.getUsername());
+        } catch (IOException e) {
+            log.error("Upload file: Input data exception");
+            throw new InputDataException("Upload file: Input data exception");
         }
-        return userEntity;
     }
 
     @Transactional
-    public void saveFile(Principal user, String filename, MultipartFile multipartFile) throws IOException {
-        validFileName(filename);
-        User userEntity = findUserByName(user);
-
-        if (repository.existsAllByFilenameAndUser(filename, userEntity)) {
-            log.error("Файла существует! " + filename);
-            throw new FileException("Файла существует! " + filename + " нужно переименовать!");
+    public void deleteFile(User user, String filename) {
+        fileRepository.deleteByUserAndFilename(user, filename);
+        StoreFile storageFile = fileRepository.findByUserAndFilename(user, filename);
+        if (storageFile != null) {
+            log.error("Delete file: Input data exception");
+            throw new InputDataException("Input data exception");
         }
-
-        File file = new File();
-        file.setFilename(filename);
-        file.setFile(multipartFile.getBytes());
-        file.setSize(multipartFile.getSize());
-        file.setCreateDate(LocalDateTime.now());
-        file.setUser(userEntity);
-
-        repository.save(file);
+        log.info("Successfully deleted file. User: {}", user.getUsername());
     }
 
     @Transactional
-    public void deleteFile(Principal user, String filename) {
-        validFileName(filename);
-        User userEntity = findUserByName(user);
-
-        File file = repository.findFileByFilenameAndUser(filename, userEntity);
-        if (file == null) {
-            log.error("Файла не существует!");
-            throw new RuntimeException("Файла не существует!");
+    public byte[] downloadFile(User user, String filename) {
+        StoreFile storageFile = fileRepository.findByUserAndFilename(user, filename);
+        if (storageFile == null) {
+            log.error("Download file: Input data exception");
+            throw new InputDataException("Download file: Input data exception");
         }
-        repository.delete(file);
-    }
-
-    public byte[] getFile(Principal user, String filename) {
-        User userEntity = findUserByName(user);
-
-        File file = repository.findFileByFilenameAndUser(filename, userEntity);
-        if (file == null) {
-            log.error("Файла не существует!");
-            throw new RuntimeException("Файла не существует!");
-        }
-        return file.getFile();
+        log.info("Downloaded file. User: {}", user.getUsername());
+        return storageFile.getFileContent();
     }
 
     @Transactional
-    public void putFile(Principal user, String filename, ChangeFilenameRequest request) {
-        validFileName(request.getFilename());
-        User userEntity = findUserByName(user);
-
-        File file = repository.findFileByFilenameAndUser(filename, userEntity);
-        if (file == null) {
-            log.error("Файла не существует!");
-            throw new FileNotExistException("Файла не существует!");
+    public void updateFilename(User user, String fileName, ChangeFilenameRequest fileDataApply) {
+        fileRepository.updateFilenameByUser(user, fileName, fileDataApply.getFilename());
+        StoreFile storageFile = fileRepository.findByUserAndFilename(user, fileName);
+        if (storageFile != null) {
+            log.error("ERROR: Input data exception");
+            throw new InputDataException("ERROR: Input data exception");
         }
-        file.setFilename(request.getFilename());
-        repository.save(file);
+        log.info("Successfully updated file name. User: {}", user.getUsername());
     }
 
-    public List<FileListResponse> getFiles(Integer limit) {
-        List<File> fileList = repository.findAll();
-        return fileList.stream().map(f -> new FileListResponse(f.getFilename(), f.getSize()))
-                .limit(limit)
-                .collect(Collectors.toList());
-    }
-
-    public void validFileName(String filename) {
-        if (filename == null || filename.isEmpty()) {
-            log.error("Не указано имя файла! Укажите имя файла!");
-            throw new MissingValueException("Не указано имя файла! Укажите имя файла!");
-        }
+    @Transactional
+    public List<StoreFile> getAllFiles(User user, Integer limit) {
+        log.info("Successfully fetched all files. User: {}", user.getUsername());
+        return fileRepository.findAllByUser(user);
     }
 }
